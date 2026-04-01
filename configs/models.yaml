@@ -1,0 +1,184 @@
+paths:
+  server_root: /data/model_support
+  home_dir: /data/model_support/.home
+  models:
+    hf: /data/model_support/models/hf
+    mop: /data/model_support/models/mop
+  caches:
+    hf_home: /data/model_support/.cache/huggingface
+    hf_hub_cache: /data/model_support/.cache/huggingface/hub
+    hf_xet_cache: /data/model_support/.cache/huggingface/xet
+    hf_assets_cache: /data/model_support/.cache/huggingface/assets
+    xdg_cache_home: /data/model_support/.cache
+    xdg_config_home: /data/model_support/.config
+    xdg_data_home: /data/model_support/.local/share
+    modelscope_cache: /data/model_support/.cache/modelscope
+    vllm_cache_root: /data/model_support/.cache/vllm
+    vllm_config_root: /data/model_support/.config/vllm
+    vllm_assets_cache: /data/model_support/.cache/vllm/assets
+    vllm_rpc_base_path: /data/model_support/.tmp/vllm-rpc
+    pip_cache_dir: /data/model_support/.cache/pip
+    pip_src: /data/model_support/.cache/pip-src
+    uv_cache_dir: /data/model_support/.cache/uv
+    tmp_dir: /data/model_support/.tmp
+    torch_home: /data/model_support/.cache/torch
+    torch_extensions_dir: /data/model_support/.cache/torch_extensions
+    torchinductor_cache_dir: /data/model_support/.cache/torchinductor
+    triton_cache_dir: /data/model_support/.cache/triton
+    triton_home: /data/model_support/.cache/triton-home
+    cuda_cache_path: /data/model_support/.cache/nv/ComputeCache
+
+defaults:
+  host: 0.0.0.0
+  generation_config: vllm
+  gpu_memory_utilization: 0.9
+  max_num_seqs: 32
+  enable_prefix_caching: true
+  enforce_eager: false
+
+models:
+  gui_owl_15_32b:
+    display_name: GUI-Owl-1.5-32B-Instruct
+    modality: multimodal
+    local_dir_name: GUI-Owl-1.5-32B-Instruct
+    repo_ids:
+      hf: mPLUG/GUI-Owl-1.5-32B-Instruct
+      mop:
+    vllm:
+      served_model_name: gui-owl-1.5-32b-instruct
+      default_port: 8001
+      tensor_parallel_size: 4
+      max_model_len: 32768
+      gpu_memory_utilization: 0.92
+      max_num_seqs: 24
+      allowed_local_media_path: /
+      limit_mm_per_prompt: image=5
+      mm_processor_kwargs: '{"size":{"longest_edge":3072000,"shortest_edge":65536}}'
+      extra_args: []
+    notes:
+      - HF 模型卡明确建议通过 vLLM 部署，并给出 32k 上下文与多图参数。
+      - 官方示例在单张 A100 96GB 上验证；你这台 8xA100-80GB 机器建议从 TP=4 起步，更稳一些。
+
+  gui_owl_7b_desktop_rl:
+    display_name: GUI-Owl-7B-Desktop-RL
+    modality: multimodal
+    local_dir_name: GUI-Owl-7B-Desktop-RL
+    repo_ids:
+      hf: mPLUG/GUI-Owl-7B-Desktop-RL
+      mop:
+    vllm:
+      served_model_name: gui-owl-7b-desktop-rl
+      default_port: 8002
+      tensor_parallel_size: 1
+      max_model_len: 32768
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 32
+      allowed_local_media_path: /
+      limit_mm_per_prompt: image=2
+      mm_processor_kwargs: '{"min_pixels":3136,"max_pixels":10035200}'
+      extra_args: []
+    notes:
+      - HF 模型卡给出了 vLLM 示例，默认 2 图输入。
+      - 这版是桌面 RL 微调版，模型卡也写了更偏研究验证用途。
+
+  ui_tars_15_7b:
+    display_name: UI-TARS-1.5-7B
+    modality: multimodal
+    local_dir_name: UI-TARS-1.5-7B
+    repo_ids:
+      hf: ByteDance-Seed/UI-TARS-1.5-7B
+      mop:
+    vllm:
+      served_model_name: ui-tars-1.5-7b
+      default_port: 8003
+      tensor_parallel_size: 2
+      max_model_len: 16384
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 32
+      allowed_local_media_path: /
+      extra_args: []
+    notes:
+      - HF 页面显示这是 `qwen2_5_vl` 架构，vLLM 官方支持该架构。
+      - 模型卡显示权重张量类型为 F32，所以我默认用 TP=2，给显存留更多余量。
+
+  qwen3_vl_235b_a22b:
+    display_name: Qwen3-VL-235B-A22B-Instruct
+    modality: multimodal
+    local_dir_name: Qwen3-VL-235B-A22B-Instruct
+    repo_ids:
+      hf: Qwen/Qwen3-VL-235B-A22B-Instruct
+      mop:
+    vllm:
+      served_model_name: qwen3-vl-235b-a22b-instruct
+      default_port: 8004
+      tensor_parallel_size: 8
+      max_model_len: 32768
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 20
+      allowed_local_media_path: /
+      extra_args: []
+    notes:
+      - 这是 236B BF16 的超大多模态模型，建议单独占满 8 卡启动。
+      - 论文原生支持更长上下文，但如果目标是稳定支撑 20 并发，先从 32k 开始更现实。
+
+  qwen35_122b_a10b:
+    display_name: Qwen3.5-122B-A10B
+    modality: multimodal
+    local_dir_name: Qwen3.5-122B-A10B
+    repo_ids:
+      hf: Qwen/Qwen3.5-122B-A10B
+      mop:
+    vllm:
+      served_model_name: qwen3.5-122b-a10b
+      default_port: 8005
+      tensor_parallel_size: 8
+      max_model_len: 65536
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 20
+      reasoning_parser: qwen3
+      allowed_local_media_path: /
+      extra_args: []
+    notes:
+      - HF 模型卡说明该模型与 vLLM 兼容，122B 总参数、10B 激活参数，原生 262k 上下文。
+      - 如果你优先追求 20 并发而不是超长上下文，先把 `max_model_len` 控制在 64k 会更好调。
+
+  qwen35_35b_a3b:
+    display_name: Qwen3.5-35B-A3B
+    modality: multimodal
+    local_dir_name: Qwen3.5-35B-A3B
+    repo_ids:
+      hf: Qwen/Qwen3.5-35B-A3B
+      mop:
+    vllm:
+      served_model_name: qwen3.5-35b-a3b
+      default_port: 8006
+      tensor_parallel_size: 8
+      max_model_len: 65536
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 32
+      reasoning_parser: qwen3
+      allowed_local_media_path: /
+      extra_args: []
+    notes:
+      - Qwen 官方模型卡直接给了 vLLM 启动命令，默认是 TP=8。
+      - 如果只做文本服务，可以手动加 `--language-model-only`，把显存更多留给 KV cache。
+
+  glm_46v:
+    display_name: GLM-4.6V
+    modality: multimodal
+    local_dir_name: GLM-4.6V
+    repo_ids:
+      hf: zai-org/GLM-4.6V
+      mop:
+    vllm:
+      served_model_name: glm-4.6v
+      default_port: 8007
+      tensor_parallel_size: 4
+      max_model_len: 16384
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 24
+      allowed_local_media_path: /
+      extra_args: []
+    notes:
+      - HF 模型卡说明 GLM-4.6V 是 106B 的云端大模型，适合高性能集群。
+      - vLLM 官方已支持 `Glm4vMoeForConditionalGeneration`；若 4 卡启动余量不够，再升到 TP=8。

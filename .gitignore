@@ -7,3 +7,4 @@ experiment_note.txt
 .tmp/
 __pycache__/
 *.pyc
+models/

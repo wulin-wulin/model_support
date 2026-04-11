@@ -1,0 +1,9 @@
+task.txt
+experiment_note.txt
+.cache/
+.config/
+.home/
+.local/
+.tmp/
+__pycache__/
+*.pyc

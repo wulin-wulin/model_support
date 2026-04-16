@@ -14,7 +14,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Check whether writable paths stay inside the project root.")
     parser.add_argument(
         "--project-root",
-        default="/data/model_support",
+        default="/home/dataset-local/data/zos_download/model_support",
         help="Expected project root on the server",
     )
     parser.add_argument(
@@ -119,7 +119,7 @@ def main() -> None:
     print("")
     if problems:
         print("Conclusion: there are writable/runtime paths outside the allowed roots.")
-        print("If you need strict project-only isolation, use a project-local virtualenv under /data/model_support/.venv.")
+        print("If you need strict project-only isolation, use a project-local virtualenv under /home/dataset-local/data/zos_download/model_support/.venv.")
         raise SystemExit(2)
 
     print("Conclusion: the checked paths are inside the allowed roots.")

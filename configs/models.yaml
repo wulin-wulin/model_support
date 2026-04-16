@@ -1,32 +1,32 @@
 paths:
-  server_root: /data/model_support
-  home_dir: /data/model_support/.home
+  server_root: /home/dataset-local/data/zos_download/model_support
+  home_dir: /home/dataset-local/data/zos_download/model_support/.home
   models:
-    hf: /data/model_support/models/hf
-    mop: /data/model_support/models/mop
+    hf: /home/dataset-local/data/zos_download/model_support/models/hf
+    mop: /home/dataset-local/data/zos_download/model_support/models/mop
   caches:
-    hf_home: /data/model_support/.cache/huggingface
-    hf_hub_cache: /data/model_support/.cache/huggingface/hub
-    hf_xet_cache: /data/model_support/.cache/huggingface/xet
-    hf_assets_cache: /data/model_support/.cache/huggingface/assets
-    xdg_cache_home: /data/model_support/.cache
-    xdg_config_home: /data/model_support/.config
-    xdg_data_home: /data/model_support/.local/share
-    modelscope_cache: /data/model_support/.cache/modelscope
-    vllm_cache_root: /data/model_support/.cache/vllm
-    vllm_config_root: /data/model_support/.config/vllm
-    vllm_assets_cache: /data/model_support/.cache/vllm/assets
-    vllm_rpc_base_path: /data/model_support/.tmp/vllm-rpc
-    pip_cache_dir: /data/model_support/.cache/pip
-    pip_src: /data/model_support/.cache/pip-src
-    uv_cache_dir: /data/model_support/.cache/uv
-    tmp_dir: /data/model_support/.tmp
-    torch_home: /data/model_support/.cache/torch
-    torch_extensions_dir: /data/model_support/.cache/torch_extensions
-    torchinductor_cache_dir: /data/model_support/.cache/torchinductor
-    triton_cache_dir: /data/model_support/.cache/triton
-    triton_home: /data/model_support/.cache/triton-home
-    cuda_cache_path: /data/model_support/.cache/nv/ComputeCache
+    hf_home: /home/dataset-local/data/zos_download/model_support/.cache/huggingface
+    hf_hub_cache: /home/dataset-local/data/zos_download/model_support/.cache/huggingface/hub
+    hf_xet_cache: /home/dataset-local/data/zos_download/model_support/.cache/huggingface/xet
+    hf_assets_cache: /home/dataset-local/data/zos_download/model_support/.cache/huggingface/assets
+    xdg_cache_home: /home/dataset-local/data/zos_download/model_support/.cache
+    xdg_config_home: /home/dataset-local/data/zos_download/model_support/.config
+    xdg_data_home: /home/dataset-local/data/zos_download/model_support/.local/share
+    modelscope_cache: /home/dataset-local/data/zos_download/model_support/.cache/modelscope
+    vllm_cache_root: /home/dataset-local/data/zos_download/model_support/.cache/vllm
+    vllm_config_root: /home/dataset-local/data/zos_download/model_support/.config/vllm
+    vllm_assets_cache: /home/dataset-local/data/zos_download/model_support/.cache/vllm/assets
+    vllm_rpc_base_path: /home/dataset-local/data/zos_download/model_support/.tmp/vllm-rpc
+    pip_cache_dir: /home/dataset-local/data/zos_download/model_support/.cache/pip
+    pip_src: /home/dataset-local/data/zos_download/model_support/.cache/pip-src
+    uv_cache_dir: /home/dataset-local/data/zos_download/model_support/.cache/uv
+    tmp_dir: /home/dataset-local/data/zos_download/model_support/.tmp
+    torch_home: /home/dataset-local/data/zos_download/model_support/.cache/torch
+    torch_extensions_dir: /home/dataset-local/data/zos_download/model_support/.cache/torch_extensions
+    torchinductor_cache_dir: /home/dataset-local/data/zos_download/model_support/.cache/torchinductor
+    triton_cache_dir: /home/dataset-local/data/zos_download/model_support/.cache/triton
+    triton_home: /home/dataset-local/data/zos_download/model_support/.cache/triton-home
+    cuda_cache_path: /home/dataset-local/data/zos_download/model_support/.cache/nv/ComputeCache
 
 defaults:
   host: 0.0.0.0

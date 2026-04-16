@@ -5,7 +5,7 @@
 ## 你会用到的文件
 
 - `configs/models.yaml`: 目标模型清单、默认端口、推荐的 vLLM 参数。
-- `configs/server.env.example`: 统一把缓存、临时文件、配置目录都压到 `/data/model_support`。
+- `configs/server.env.example`: 统一把缓存、临时文件、配置目录都压到 `/home/dataset-local/data/zos_download/model_support`。
 - `scripts/download_model.py`: 下载模型到 `models/hf` 或 `models/mop`。
 - `scripts/start_vllm.py`: 按模型别名拼出并执行 `vllm serve` 命令。
 - `scripts/smoke_test_openai.py`: 用 OpenAI SDK 打文本或多模态 smoke test。
@@ -16,7 +16,7 @@
 
 ## 推荐使用顺序
 
-1. 先看 `docs/01-download-guide.md`，在服务器上把模型拉到 `/data/model_support/models/...`。
+1. 先看 `docs/01-download-guide.md`，在服务器上把模型拉到 `/home/dataset-local/data/zos_download/model_support/models/...`。
 2. 把本目录同步到服务器后，按 `docs/02-deploy-and-test.md` 安装依赖。
 3. 先跑 `python scripts/check_storage_paths.py` 检查当前 shell 的写路径是否都在允许范围内。
 4. 用 `python scripts/render_commands.py --list` 看所有模型的别名、端口和推荐参数。
@@ -28,16 +28,16 @@
 
 如果你的要求只是“不占系统盘”，现有 `/data/conda/envs/chartmodel_wulin` 可以继续用，因为它在 `data` 盘。
 
-如果你的要求是“所有安装、缓存、临时文件都必须在 `/data/model_support` 项目目录里”，那就不要把依赖装进 `chartmodel_wulin`，因为 `site-packages` 会写到 `/data/conda/envs/chartmodel_wulin/...`，这虽然不在系统盘，但也不在项目目录里。
+如果你的要求是“所有安装、缓存、临时文件都必须在 `/home/dataset-local/data/zos_download/model_support` 项目目录里”，那就不要把依赖装进 `chartmodel_wulin`，因为 `site-packages` 会写到 `/data/conda/envs/chartmodel_wulin/...`，这虽然不在系统盘，但也不在项目目录里。
 
 这种严格模式下，推荐在服务器上改用项目内虚拟环境：
 
 ```bash
-cd /data/model_support
+cd /home/dataset-local/data/zos_download/model_support
 conda activate chartmodel_wulin
 source configs/server.env.example
-python -m venv /data/model_support/.venv
-source /data/model_support/.venv/bin/activate
+python -m venv /home/dataset-local/data/zos_download/model_support/.venv
+source /home/dataset-local/data/zos_download/model_support/.venv/bin/activate
 python scripts/check_storage_paths.py
 ```
 

@@ -17,7 +17,7 @@ from _model_registry import (
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Download a model into /data/model_support.")
+    parser = argparse.ArgumentParser(description="Download a model into /home/dataset-local/data/zos_download/model_support.")
     parser.add_argument("--config", default=None, help="Path to models.yaml")
     parser.add_argument("--model", required=True, help="Model alias from configs/models.yaml")
     parser.add_argument("--source", choices=["hf", "mop"], default="hf", help="Download source")

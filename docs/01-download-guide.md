@@ -1,16 +1,16 @@
 # 服务器下载指引
 
-这份指引只负责“把模型下载到指定位置”，不会替你在服务器上直接执行。你的硬约束是系统盘空间紧，所有模型、缓存、临时文件都要落到 `/data/model_support`。
+这份指引只负责“把模型下载到指定位置”，不会替你在服务器上直接执行。你的硬约束是系统盘空间紧，所有模型、缓存、临时文件都要落到 `/home/dataset-local/data/zos_download/model_support`。
 
 先说结论：
 
 - 如果你只是要求“不占系统盘”，那么使用 `/data/conda/envs/chartmodel_wulin` 是可以的，因为它本身就在 `data` 盘。
-- 如果你要求“所有内容都必须在 `/data/model_support` 项目目录里”，那么只靠这个 conda 环境不够，因为后续 `pip install` 的包会写进 `/data/conda/envs/chartmodel_wulin/lib/...`。
+- 如果你要求“所有内容都必须在 `/home/dataset-local/data/zos_download/model_support` 项目目录里”，那么只靠这个 conda 环境不够，因为后续 `pip install` 的包会写进 `/data/conda/envs/chartmodel_wulin/lib/...`。
 
 ## 1. 先切到项目根目录
 
 ```bash
-cd /data/model_support
+cd /home/dataset-local/data/zos_download/model_support
 conda activate chartmodel_wulin
 ```
 
@@ -21,19 +21,19 @@ conda activate chartmodel_wulin
 ```bash
 source configs/server.env.example
 mkdir -p \
-  /data/model_support/.home \
-  /data/model_support/models/hf \
-  /data/model_support/models/mop \
-  /data/model_support/.cache \
-  /data/model_support/.config \
-  /data/model_support/.local/share \
-  /data/model_support/.tmp
+  /home/dataset-local/data/zos_download/model_support/.home \
+  /home/dataset-local/data/zos_download/model_support/models/hf \
+  /home/dataset-local/data/zos_download/model_support/models/mop \
+  /home/dataset-local/data/zos_download/model_support/.cache \
+  /home/dataset-local/data/zos_download/model_support/.config \
+  /home/dataset-local/data/zos_download/model_support/.local/share \
+  /home/dataset-local/data/zos_download/model_support/.tmp
 ```
 
 这样做的目的有三个：
 
 - `HF_HOME`、`PIP_CACHE_DIR`、`TMPDIR` 不再碰系统盘。
-- vLLM 自己的缓存和配置目录也被压到 `/data/model_support`。
+- vLLM 自己的缓存和配置目录也被压到 `/home/dataset-local/data/zos_download/model_support`。
 - 后面不管你是用 Hugging Face、ModelScope、uv、PyTorch、Triton 还是 CUDA JIT，默认写盘点都尽量被压回项目目录。
 
 ## 3. 两种安装模式里你该选哪一个
@@ -48,7 +48,7 @@ source configs/server.env.example
 python scripts/check_storage_paths.py --allow-prefix /data/conda/envs/chartmodel_wulin
 ```
 
-这里 `--allow-prefix` 的意思是：允许 Python 解释器和 `site-packages` 继续落在 `/data/conda/envs/chartmodel_wulin`，但缓存和临时目录仍然必须在 `/data/model_support`。
+这里 `--allow-prefix` 的意思是：允许 Python 解释器和 `site-packages` 继续落在 `/data/conda/envs/chartmodel_wulin`，但缓存和临时目录仍然必须在 `/home/dataset-local/data/zos_download/model_support`。
 
 ### 模式 B：要求绝对只在项目目录里
 
@@ -57,8 +57,8 @@ python scripts/check_storage_paths.py --allow-prefix /data/conda/envs/chartmodel
 ```bash
 conda activate chartmodel_wulin
 source configs/server.env.example
-python -m venv /data/model_support/.venv
-source /data/model_support/.venv/bin/activate
+python -m venv /home/dataset-local/data/zos_download/model_support/.venv
+source /home/dataset-local/data/zos_download/model_support/.venv/bin/activate
 python scripts/check_storage_paths.py
 ```
 
@@ -115,13 +115,13 @@ python scripts/download_model.py --model qwen35_35b_a3b --source hf
 脚本会把模型直接下载到：
 
 ```text
-/data/model_support/models/hf/<local_dir_name>
+/home/dataset-local/data/zos_download/model_support/models/hf/<local_dir_name>
 ```
 
 例如：
 
 ```text
-/data/model_support/models/hf/Qwen3.5-35B-A3B
+/home/dataset-local/data/zos_download/model_support/models/hf/Qwen3.5-35B-A3B
 ```
 
 如果某个仓库需要 Hugging Face Token，先导出：
@@ -159,7 +159,7 @@ python scripts/download_model.py \
 目标目录会是：
 
 ```text
-/data/model_support/models/mop/Qwen3.5-35B-A3B
+/home/dataset-local/data/zos_download/model_support/models/mop/Qwen3.5-35B-A3B
 ```
 
 ## 8. 我建议你实际下载时按这个顺序来
@@ -179,13 +179,13 @@ python scripts/download_model.py \
 每下完一个模型都建议检查一次目录：
 
 ```bash
-du -sh /data/model_support/models/hf/*
-find /data/model_support/models/hf/Qwen3.5-35B-A3B -maxdepth 1 | head
+du -sh /home/dataset-local/data/zos_download/model_support/models/hf/*
+find /home/dataset-local/data/zos_download/model_support/models/hf/Qwen3.5-35B-A3B -maxdepth 1 | head
 ```
 
 重点确认：
 
-- 文件确实在 `/data/model_support/models/...` 下。
+- 文件确实在 `/home/dataset-local/data/zos_download/model_support/models/...` 下。
 - 不是跑到了根目录 overlay 或用户家目录缓存。
 - `config.json`、`tokenizer_config.json`、`model.safetensors.index.json` 这类核心文件都在。
 

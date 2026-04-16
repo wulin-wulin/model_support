@@ -1,11 +1,11 @@
 # 部署、启动和测试
 
-这部分默认你已经把模型文件下载到了 `/data/model_support/models/hf` 或 `/data/model_support/models/mop`，并且已经把这份代码同步到了服务器。
+这部分默认你已经把模型文件下载到了 `/home/dataset-local/data/zos_download/model_support/models/hf` 或 `/home/dataset-local/data/zos_download/model_support/models/mop`，并且已经把这份代码同步到了服务器。
 
 ## 1. 进入环境
 
 ```bash
-cd /data/model_support
+cd /home/dataset-local/data/zos_download/model_support
 conda activate chartmodel_wulin
 source configs/server.env.example
 ```
@@ -13,13 +13,13 @@ source configs/server.env.example
 这里先把一句关键话说清楚：
 
 - 用 `chartmodel_wulin` 直接安装依赖，不会占系统盘，因为这个环境本身在 `/data/conda/envs/...`。
-- 但如果你要求“所有字节都只能写在 `/data/model_support` 项目目录里”，那就应该继续执行下面的“严格模式”。
+- 但如果你要求“所有字节都只能写在 `/home/dataset-local/data/zos_download/model_support` 项目目录里”，那就应该继续执行下面的“严格模式”。
 
 ### 严格模式：项目内虚拟环境
 
 ```bash
-python -m venv /data/model_support/.venv
-source /data/model_support/.venv/bin/activate
+python -m venv /home/dataset-local/data/zos_download/model_support/.venv
+source /home/dataset-local/data/zos_download/model_support/.venv/bin/activate
 python scripts/check_storage_paths.py
 ```
 
@@ -148,7 +148,7 @@ python scripts/smoke_test_openai.py \
 python scripts/smoke_test_openai.py \
   --base-url http://127.0.0.1:8001/v1 \
   --model gui-owl-1.5-32b-instruct \
-  --image-path /data/model_support/test_assets/example.png \
+  --image-path /home/dataset-local/data/zos_download/model_support/test_assets/example.png \
   --prompt "这是一个什么界面？请指出主要按钮。"
 ```
 

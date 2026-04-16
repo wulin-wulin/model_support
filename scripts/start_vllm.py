@@ -16,6 +16,15 @@ from _model_registry import (
 )
 
 
+def find_env_refs_under_old_data_root(env: dict[str, str]) -> list[tuple[str, str]]:
+    matches: list[tuple[str, str]] = []
+    for key, value in sorted(env.items()):
+        for part in value.split(os.pathsep):
+            if part == "/data" or part.startswith("/data/"):
+                matches.append((key, part))
+    return matches
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Build and optionally run a vLLM serve command.")
     parser.add_argument("--config", default=None, help="Path to models.yaml")
@@ -137,6 +146,7 @@ def main() -> None:
     print("")
     print("Key env:")
     for key in [
+        "MODEL_SUPPORT_ROOT",
         "HOME",
         "HF_HOME",
         "HF_HUB_CACHE",
@@ -162,6 +172,15 @@ def main() -> None:
     ]:
         if key in env:
             print(f"  {key}={env[key]}")
+
+    old_data_refs = find_env_refs_under_old_data_root(env)
+    if old_data_refs:
+        print("")
+        print("WARNING: final environment still contains paths under /data:")
+        for key, value in old_data_refs[:20]:
+            print(f"  {key}={value}")
+        if len(old_data_refs) > 20:
+            print(f"  ... and {len(old_data_refs) - 20} more")
 
     if args.print_only or not args.run:
         return

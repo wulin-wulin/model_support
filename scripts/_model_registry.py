@@ -57,6 +57,7 @@ def get_model_dir(
 def get_cache_env(config: dict[str, Any]) -> dict[str, str]:
     caches = config["paths"]["caches"]
     return {
+        "MODEL_SUPPORT_ROOT": str(config["paths"]["server_root"]),
         "HOME": str(config["paths"]["home_dir"]),
         "HF_HOME": str(caches["hf_home"]),
         "HF_HUB_CACHE": str(caches["hf_hub_cache"]),

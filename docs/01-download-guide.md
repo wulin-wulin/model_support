@@ -4,14 +4,14 @@
 
 先说结论：
 
-- 如果你只是要求“不占系统盘”，那么使用 `/data/conda/envs/chartmodel_wulin` 是可以的，因为它本身就在 `data` 盘。
-- 如果你要求“所有内容都必须在 `/home/dataset-local/data/zos_download/model_support` 项目目录里”，那么只靠这个 conda 环境不够，因为后续 `pip install` 的包会写进 `/data/conda/envs/chartmodel_wulin/lib/...`。
+- 如果你只是要求“不占系统盘”，那么使用 `/home/dataset-local/data/zos_download/conda/envs/model_support` 是可以的，因为它本身就在数据盘。
+- 如果你要求“所有内容都必须在 `/home/dataset-local/data/zos_download/model_support` 项目目录里”，那么只靠这个 conda 环境不够，因为后续 `pip install` 的包会写进 `/home/dataset-local/data/zos_download/conda/envs/model_support/lib/...`。
 
 ## 1. 先切到项目根目录
 
 ```bash
 cd /home/dataset-local/data/zos_download/model_support
-conda activate chartmodel_wulin
+conda activate model_support
 ```
 
 ## 2. 先把缓存和临时目录全部压到 `/data`
@@ -43,19 +43,19 @@ mkdir -p \
 继续用你已有的 conda 环境：
 
 ```bash
-conda activate chartmodel_wulin
+conda activate model_support
 source configs/server.env.example
-python scripts/check_storage_paths.py --allow-prefix /data/conda/envs/chartmodel_wulin
+python scripts/check_storage_paths.py --allow-prefix /home/dataset-local/data/zos_download/conda/envs/model_support
 ```
 
-这里 `--allow-prefix` 的意思是：允许 Python 解释器和 `site-packages` 继续落在 `/data/conda/envs/chartmodel_wulin`，但缓存和临时目录仍然必须在 `/home/dataset-local/data/zos_download/model_support`。
+这里 `--allow-prefix` 的意思是：允许 Python 解释器和 `site-packages` 继续落在 `/home/dataset-local/data/zos_download/conda/envs/model_support`，但缓存和临时目录仍然必须在 `/home/dataset-local/data/zos_download/model_support`。
 
 ### 模式 B：要求绝对只在项目目录里
 
 这种情况下不要把包装进 conda 环境，而是在项目里再建一个 `.venv`：
 
 ```bash
-conda activate chartmodel_wulin
+conda activate model_support
 source configs/server.env.example
 python -m venv /home/dataset-local/data/zos_download/model_support/.venv
 source /home/dataset-local/data/zos_download/model_support/.venv/bin/activate

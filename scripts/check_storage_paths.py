@@ -10,6 +10,14 @@ import tempfile
 from pathlib import Path
 
 
+def extract_old_data_segments(value: str) -> list[str]:
+    segments: list[str] = []
+    for part in value.split(os.pathsep):
+        if part == "/data" or part.startswith("/data/"):
+            segments.append(part)
+    return segments
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Check whether writable paths stay inside the project root.")
     parser.add_argument(
@@ -21,7 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--allow-prefix",
         action="append",
         default=[],
-        help="Additional allowed path prefixes, e.g. /data/conda/envs/chartmodel_wulin",
+        help="Additional allowed path prefixes, e.g. /home/dataset-local/data/zos_download/conda/envs/model_support",
     )
     return parser
 
@@ -41,6 +49,7 @@ def is_allowed(path_str: str, allowed_roots: list[str]) -> bool:
 def collect_paths() -> list[tuple[str, str]]:
     items: list[tuple[str, str]] = []
     env_keys = [
+        "MODEL_SUPPORT_ROOT",
         "HOME",
         "HF_HOME",
         "HF_HUB_CACHE",
@@ -80,6 +89,13 @@ def collect_paths() -> list[tuple[str, str]]:
 
     for idx, path_str in enumerate(site.getsitepackages()):
         items.append((f"python:sitepackages[{idx}]", path_str))
+
+    seen = {name.removeprefix("env:") for name, _ in items if name.startswith("env:")}
+    for key, value in os.environ.items():
+        if key in seen:
+            continue
+        for segment in extract_old_data_segments(value):
+            items.append((f"env:suspicious:{key}", segment))
 
     try:
         result = subprocess.run(

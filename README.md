@@ -26,15 +26,15 @@
 
 ## 存储隔离结论
 
-如果你的要求只是“不占系统盘”，现有 `/data/conda/envs/chartmodel_wulin` 可以继续用，因为它在 `data` 盘。
+如果你的要求只是“不占系统盘”，现有 `/home/dataset-local/data/zos_download/conda/envs/model_support` 可以继续用，因为它在数据盘。
 
-如果你的要求是“所有安装、缓存、临时文件都必须在 `/home/dataset-local/data/zos_download/model_support` 项目目录里”，那就不要把依赖装进 `chartmodel_wulin`，因为 `site-packages` 会写到 `/data/conda/envs/chartmodel_wulin/...`，这虽然不在系统盘，但也不在项目目录里。
+如果你的要求是“所有安装、缓存、临时文件都必须在 `/home/dataset-local/data/zos_download/model_support` 项目目录里”，那就不要把依赖装进 `model_support` 这个 conda 环境，因为 `site-packages` 会写到 `/home/dataset-local/data/zos_download/conda/envs/model_support/...`，这虽然不在系统盘，但也不在项目目录里。
 
 这种严格模式下，推荐在服务器上改用项目内虚拟环境：
 
 ```bash
 cd /home/dataset-local/data/zos_download/model_support
-conda activate chartmodel_wulin
+conda activate model_support
 source configs/server.env.example
 python -m venv /home/dataset-local/data/zos_download/model_support/.venv
 source /home/dataset-local/data/zos_download/model_support/.venv/bin/activate

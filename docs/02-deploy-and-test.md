@@ -6,13 +6,13 @@
 
 ```bash
 cd /home/dataset-local/data/zos_download/model_support
-conda activate chartmodel_wulin
+conda activate model_support
 source configs/server.env.example
 ```
 
 这里先把一句关键话说清楚：
 
-- 用 `chartmodel_wulin` 直接安装依赖，不会占系统盘，因为这个环境本身在 `/data/conda/envs/...`。
+- 用 `model_support` 这个 conda 环境直接安装依赖，不会占系统盘，因为这个环境本身在 `/home/dataset-local/data/zos_download/conda/envs/...`。
 - 但如果你要求“所有字节都只能写在 `/home/dataset-local/data/zos_download/model_support` 项目目录里”，那就应该继续执行下面的“严格模式”。
 
 ### 严格模式：项目内虚拟环境
@@ -26,7 +26,7 @@ python scripts/check_storage_paths.py
 如果你只要求“不碰系统盘”，可以继续用 conda 环境并这样检查：
 
 ```bash
-python scripts/check_storage_paths.py --allow-prefix /data/conda/envs/chartmodel_wulin
+python scripts/check_storage_paths.py --allow-prefix /home/dataset-local/data/zos_download/conda/envs/model_support
 ```
 
 ## 2. 先装辅助依赖
@@ -61,7 +61,7 @@ python scripts/check_storage_paths.py
 如果你是继续使用 conda 环境，则改成：
 
 ```bash
-python scripts/check_storage_paths.py --allow-prefix /data/conda/envs/chartmodel_wulin
+python scripts/check_storage_paths.py --allow-prefix /home/dataset-local/data/zos_download/conda/envs/model_support
 ```
 
 ## 4. 启动前先检查命令

@@ -92,6 +92,26 @@ python scripts/start_vllm.py --model qwen35_35b_a3b --source hf --run
 python scripts/start_vllm.py --model qwen3_vl_235b_a22b --source hf --run
 ```
 
+如果 `Qwen3.5` 在启动阶段报错，堆栈里出现 `qwen3_5.py`、`qwen3_next.py`、`torch._dynamo`、`torch._inductor` 或 `cuda_graph`，先优先做这两步排障：
+
+```bash
+python scripts/start_vllm.py \
+  --model qwen35_35b_a3b \
+  --source hf \
+  --enforce-eager \
+  --run
+```
+
+如果报错里明确提到 CUDA graph capture size，再继续收紧：
+
+```bash
+python scripts/start_vllm.py \
+  --model qwen35_35b_a3b \
+  --source hf \
+  --max-cudagraph-capture-size 64 \
+  --run
+```
+
 脚本会自动带上：
 
 - `--served-model-name`

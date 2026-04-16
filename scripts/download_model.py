@@ -105,8 +105,7 @@ def main() -> None:
     target_dir_str = get_model_dir(config, model_cfg, args.source)
 
     env_hint = get_cache_env(config)
-    for key, value in env_hint.items():
-        os.environ.setdefault(key, value)
+    os.environ.update(env_hint)
 
     print_plan(args.source, repo_id, target_dir_str)
     print("")

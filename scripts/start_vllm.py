@@ -31,6 +31,16 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         help="Override gpu_memory_utilization",
     )
+    parser.add_argument(
+        "--enforce-eager",
+        action="store_true",
+        help="Force eager execution and disable the CUDA graph path",
+    )
+    parser.add_argument(
+        "--max-cudagraph-capture-size",
+        type=int,
+        help="Cap CUDA graph capture size for startup stability on some models",
+    )
     parser.add_argument("--max-num-seqs", type=int, help="Override max_num_seqs")
     parser.add_argument(
         "--served-model-name",
@@ -79,11 +89,13 @@ def build_command(args: argparse.Namespace, config: dict, model_cfg: dict) -> tu
         ]
     )
     command.extend(["--max-num-seqs", str(args.max_num_seqs or vllm_cfg["max_num_seqs"])])
+    if args.max_cudagraph_capture_size is not None:
+        command.extend(["--max-cudagraph-capture-size", str(args.max_cudagraph_capture_size)])
     command.extend(["--generation-config", str(vllm_cfg["generation_config"])])
 
     if vllm_cfg.get("enable_prefix_caching"):
         command.append("--enable-prefix-caching")
-    if vllm_cfg.get("enforce_eager"):
+    if vllm_cfg.get("enforce_eager") or args.enforce_eager:
         command.append("--enforce-eager")
     if vllm_cfg.get("reasoning_parser"):
         command.extend(["--reasoning-parser", str(vllm_cfg["reasoning_parser"])])
@@ -107,8 +119,7 @@ def build_command(args: argparse.Namespace, config: dict, model_cfg: dict) -> tu
 
     env = os.environ.copy()
     env_defaults = get_cache_env(config)
-    for key, value in env_defaults.items():
-        env.setdefault(key, value)
+    env.update(env_defaults)
 
     return command, env
 

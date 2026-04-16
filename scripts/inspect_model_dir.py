@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 
@@ -40,8 +41,18 @@ def is_text_candidate(path: Path) -> bool:
     return path.suffix.lower() in TEXT_EXTENSIONS
 
 
+def is_exact_path_prefix_match(value: str, pattern: str) -> bool:
+    return value == pattern or value.startswith(f"{pattern}/")
+
+
+def build_content_pattern(pattern: str) -> re.Pattern[str]:
+    escaped = re.escape(pattern)
+    return re.compile(rf"(^|[\s\"'=:\[(,]){escaped}(/|$)")
+
+
 def inspect_model_dir(model_dir: Path, pattern: str, max_findings: int) -> int:
     findings: list[str] = []
+    content_pattern = build_content_pattern(pattern)
 
     if not model_dir.exists():
         print(f"[ERROR] model_dir does not exist: {model_dir}")
@@ -64,14 +75,17 @@ def inspect_model_dir(model_dir: Path, pattern: str, max_findings: int) -> int:
             if path.is_symlink():
                 target = path.readlink()
                 resolved = path.resolve(strict=False)
-                if pattern in str(target) or pattern in str(resolved):
+                if is_exact_path_prefix_match(str(target), pattern) or is_exact_path_prefix_match(
+                    str(resolved),
+                    pattern,
+                ):
                     findings.append(
                         f"[SYMLINK] {path} -> {target} (resolved: {resolved})",
                     )
                 continue
 
             resolved = path.resolve(strict=False)
-            if pattern in str(resolved):
+            if is_exact_path_prefix_match(str(resolved), pattern):
                 findings.append(f"[REALPATH] {path} -> {resolved}")
                 continue
 
@@ -81,7 +95,7 @@ def inspect_model_dir(model_dir: Path, pattern: str, max_findings: int) -> int:
                 except OSError as exc:
                     findings.append(f"[READ-ERROR] {path}: {exc}")
                     continue
-                if pattern in content:
+                if content_pattern.search(content):
                     findings.append(f"[CONTENT] {path}")
         except OSError as exc:
             findings.append(f"[STAT-ERROR] {path}: {exc}")

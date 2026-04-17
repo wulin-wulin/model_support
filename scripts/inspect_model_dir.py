@@ -16,6 +16,7 @@ TEXT_EXTENSIONS = {
     ".ini",
     ".cfg",
 }
+MAX_TEXT_PROBE_BYTES = 1_000_000
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -38,7 +39,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def is_text_candidate(path: Path) -> bool:
-    return path.suffix.lower() in TEXT_EXTENSIONS
+    if path.suffix.lower() in TEXT_EXTENSIONS:
+        return True
+    if path.suffix:
+        return False
+    try:
+        return path.stat().st_size <= MAX_TEXT_PROBE_BYTES
+    except OSError:
+        return False
 
 
 def is_exact_path_prefix_match(value: str, pattern: str) -> bool:

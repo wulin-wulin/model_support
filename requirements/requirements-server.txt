@@ -1,5 +1,6 @@
 PyYAML>=6.0.2
 huggingface_hub>=0.31.1
+transformers>=4.56.0,<5
 openai>=1.76.0
 httpx>=0.28.1
 requests>=2.32.3

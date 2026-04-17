@@ -36,6 +36,36 @@ python -m pip install -U pip
 python -m pip install -r requirements/requirements-server.txt
 ```
 
+如果你在加载 `Qwen3.5` 本地模型时看到类似下面的错误：
+
+```text
+ValueError: The checkpoint you are trying to load has model type `qwen3_5_moe`
+but Transformers does not recognize this architecture.
+```
+
+这里要区分两条完全不同的链路：
+
+- 如果你是在做“纯 `transformers` 本地加载 / `transformers serve`”验证，那么 `Qwen3.5` 官方模型卡要求使用最新的 `transformers`。
+- 如果你是在跑 `vLLM`，就不要因为这条报错把同一个环境直接升级到 `transformers>=5`。当前 `vllm 0.18.x` 明确要求 `transformers<5`，强升到 `5.x` 会把 vLLM 环境变成不兼容状态。
+
+这份工程的 `requirements/requirements-server.txt` 现在已经改回和 vLLM 稳定版对齐的范围：
+
+```bash
+transformers>=4.56.0,<5
+```
+
+如果你已经把当前 vLLM 环境升到了 `transformers 5.x`，先回退到兼容范围，或者更稳妥地新建一个干净环境后重装 vLLM。
+
+例如，直接把当前环境拉回兼容状态：
+
+```bash
+python -m pip install --upgrade --force-reinstall --no-cache-dir \
+  "transformers>=4.56.0,<5" \
+  -i https://pypi.org/simple
+```
+
+如果你只是想验证 “`transformers` 自己能不能直接识别 Qwen3.5”，建议单独建一个测试环境，不要和 vLLM 共用。
+
 ## 3. 安装 vLLM
 
 这里要分两层理解：

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import os
 import shlex
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -14,6 +15,53 @@ from _model_registry import (
     load_config,
     merge_vllm_settings,
 )
+
+
+KEY_ENV_VARS = [
+    "MODEL_SUPPORT_ROOT",
+    "HOME",
+    "HF_HOME",
+    "HF_HUB_CACHE",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "MODELSCOPE_CACHE",
+    "VLLM_CACHE_ROOT",
+    "VLLM_CONFIG_ROOT",
+    "VLLM_ASSETS_CACHE",
+    "VLLM_RPC_BASE_PATH",
+    "PIP_CACHE_DIR",
+    "UV_CACHE_DIR",
+    "TMPDIR",
+    "TORCH_HOME",
+    "TORCH_EXTENSIONS_DIR",
+    "TORCHINDUCTOR_CACHE_DIR",
+    "TRITON_CACHE_DIR",
+    "TRITON_HOME",
+    "CUDA_CACHE_PATH",
+    "TORCHINDUCTOR_FORCE_DISABLE_CACHES",
+    "TORCH_COMPILE_FORCE_DISABLE_CACHES",
+    "TORCHINDUCTOR_AUTOTUNE_REMOTE_CACHE",
+    "TORCHINDUCTOR_BUNDLED_AUTOTUNE_REMOTE_CACHE",
+    "TORCHINDUCTOR_FX_GRAPH_REMOTE_CACHE",
+    "VLLM_API_KEY",
+    "CUDA_VISIBLE_DEVICES",
+]
+
+TORCH_COMPILE_CACHE_ENV_OVERRIDES = {
+    "TORCHINDUCTOR_FORCE_DISABLE_CACHES": "1",
+    "TORCH_COMPILE_FORCE_DISABLE_CACHES": "1",
+    "TORCHINDUCTOR_AUTOTUNE_REMOTE_CACHE": "0",
+    "TORCHINDUCTOR_BUNDLED_AUTOTUNE_REMOTE_CACHE": "0",
+    "TORCHINDUCTOR_FX_GRAPH_REMOTE_CACHE": "0",
+}
+
+PURGE_CACHE_DIR_KEYS = [
+    "vllm_cache_root",
+    "torchinductor_cache_dir",
+    "triton_cache_dir",
+    "triton_home",
+]
 
 
 def find_env_refs_under_old_data_root(env: dict[str, str]) -> list[tuple[str, str]]:
@@ -66,9 +114,37 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Append raw vLLM arguments, e.g. --extra-arg=\"--enable-auto-tool-choice\"",
     )
+    parser.add_argument(
+        "--disable-torch-compile-caches",
+        action="store_true",
+        help="Disable Torch compile/autotune caches for this run to avoid stale cache path issues",
+    )
+    parser.add_argument(
+        "--purge-compile-caches",
+        action="store_true",
+        help="Delete configured vLLM/Torch/Triton compile cache directories before launch",
+    )
     parser.add_argument("--print-only", action="store_true", help="Print command and exit")
     parser.add_argument("--run", action="store_true", help="Run the generated command")
     return parser
+
+
+def get_compile_cache_dirs(config: dict) -> list[Path]:
+    caches = config["paths"]["caches"]
+    return [Path(str(caches[key])) for key in PURGE_CACHE_DIR_KEYS]
+
+
+def purge_cache_dirs(paths: list[Path], allowed_root: Path) -> None:
+    resolved_root = allowed_root.resolve(strict=False)
+    for path in paths:
+        resolved_path = path.resolve(strict=False)
+        if resolved_path == resolved_root or not resolved_path.is_relative_to(resolved_root):
+            raise ValueError(
+                f"Refusing to purge cache dir outside server_root: {resolved_path} (server_root={resolved_root})"
+            )
+        if path.exists():
+            print(f"Purging cache dir: {path}")
+            shutil.rmtree(path)
 
 
 def build_command(args: argparse.Namespace, config: dict, model_cfg: dict) -> tuple[list[str], dict[str, str]]:
@@ -129,6 +205,8 @@ def build_command(args: argparse.Namespace, config: dict, model_cfg: dict) -> tu
     env = os.environ.copy()
     env_defaults = get_cache_env(config)
     env.update(env_defaults)
+    if args.disable_torch_compile_caches:
+        env.update(TORCH_COMPILE_CACHE_ENV_OVERRIDES)
 
     return command, env
 
@@ -145,31 +223,7 @@ def main() -> None:
     print("  " + " ".join(shlex.quote(part) for part in command))
     print("")
     print("Key env:")
-    for key in [
-        "MODEL_SUPPORT_ROOT",
-        "HOME",
-        "HF_HOME",
-        "HF_HUB_CACHE",
-        "XDG_CACHE_HOME",
-        "XDG_CONFIG_HOME",
-        "XDG_DATA_HOME",
-        "MODELSCOPE_CACHE",
-        "VLLM_CACHE_ROOT",
-        "VLLM_CONFIG_ROOT",
-        "VLLM_ASSETS_CACHE",
-        "VLLM_RPC_BASE_PATH",
-        "PIP_CACHE_DIR",
-        "UV_CACHE_DIR",
-        "TMPDIR",
-        "TORCH_HOME",
-        "TORCH_EXTENSIONS_DIR",
-        "TORCHINDUCTOR_CACHE_DIR",
-        "TRITON_CACHE_DIR",
-        "TRITON_HOME",
-        "CUDA_CACHE_PATH",
-        "VLLM_API_KEY",
-        "CUDA_VISIBLE_DEVICES",
-    ]:
+    for key in KEY_ENV_VARS:
         if key in env:
             print(f"  {key}={env[key]}")
 
@@ -187,6 +241,9 @@ def main() -> None:
 
     model_path = Path(args.model_path) if args.model_path else Path(get_model_dir(config, model_cfg, args.source))
     env_defaults = get_cache_env(config)
+    server_root = Path(str(config["paths"]["server_root"]))
+    if args.purge_compile_caches:
+        purge_cache_dirs(get_compile_cache_dirs(config), server_root)
     ensure_dirs([model_path.parent] + [Path(value) for value in env_defaults.values()])
 
     subprocess.run(command, check=True, env=env)

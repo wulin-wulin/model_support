@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shlex
 import shutil
 import subprocess
+from importlib.metadata import PackageNotFoundError, version as package_version
 from pathlib import Path
 
 from _model_registry import (
@@ -62,6 +64,13 @@ PURGE_CACHE_DIR_KEYS = [
     "triton_cache_dir",
     "triton_home",
 ]
+
+
+def get_installed_package_version(name: str) -> str | None:
+    try:
+        return package_version(name)
+    except PackageNotFoundError:
+        return None
 
 
 def find_env_refs_under_old_data_root(env: dict[str, str]) -> list[tuple[str, str]]:
@@ -124,6 +133,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Delete configured vLLM/Torch/Triton compile cache directories before launch",
     )
+    parser.add_argument(
+        "--skip-preflight-checks",
+        action="store_true",
+        help="Skip lightweight local validation such as multimodal processor loading",
+    )
     parser.add_argument("--print-only", action="store_true", help="Print command and exit")
     parser.add_argument("--run", action="store_true", help="Run the generated command")
     return parser
@@ -145,6 +159,77 @@ def purge_cache_dirs(paths: list[Path], allowed_root: Path) -> None:
         if path.exists():
             print(f"Purging cache dir: {path}")
             shutil.rmtree(path)
+
+
+def load_processor_class_name(model_path: Path) -> str | None:
+    for filename in ["processor_config.json", "preprocessor_config.json"]:
+        path = model_path / filename
+        if not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        processor_class = data.get("processor_class")
+        if isinstance(processor_class, str) and processor_class:
+            return processor_class
+    return None
+
+
+def run_preflight_checks(
+    args: argparse.Namespace,
+    model_cfg: dict,
+    model_path: Path,
+) -> list[str]:
+    issues: list[str] = []
+    if args.skip_preflight_checks:
+        return issues
+    if model_cfg.get("modality") != "multimodal" or args.language_model_only:
+        return issues
+    if not model_path.exists():
+        issues.append(f"Model path does not exist: {model_path}")
+        return issues
+
+    processor_class_name = load_processor_class_name(model_path)
+    transformers_version = get_installed_package_version("transformers") or "unknown"
+    vllm_version = get_installed_package_version("vllm") or "unknown"
+
+    try:
+        from transformers import AutoProcessor
+        from transformers.processing_utils import ProcessorMixin
+    except Exception as exc:
+        issues.append(f"Failed to import transformers processor utilities: {exc}")
+        return issues
+
+    try:
+        processor = AutoProcessor.from_pretrained(str(model_path))
+    except Exception as exc:
+        issue = f"AutoProcessor.from_pretrained({model_path}) failed: {exc}"
+        if processor_class_name == "Glm46VProcessor":
+            issue += (
+                " The model config expects Glm46VProcessor; the official GLM-4.6V model card "
+                "requires transformers>=5.0.0rc0."
+            )
+            if vllm_version == "0.19.0":
+                issue += " Current vLLM appears to be 0.19.0; vLLM 0.19.1 upgraded to Transformers v5.5.4."
+        issues.append(issue)
+        return issues
+
+    if not isinstance(processor, ProcessorMixin):
+        issue = (
+            "AutoProcessor returned "
+            f"{type(processor).__name__} instead of a ProcessorMixin "
+            f"(transformers={transformers_version}, vllm={vllm_version})."
+        )
+        if processor_class_name == "Glm46VProcessor":
+            issue += (
+                " This usually means the current transformers build is too old for GLM-4.6V. "
+                "The official GLM-4.6V model card requires transformers>=5.0.0rc0, and "
+                "vLLM 0.19.1 upgraded to Transformers v5.5.4."
+            )
+        issues.append(issue)
+
+    return issues
 
 
 def build_command(args: argparse.Namespace, config: dict, model_cfg: dict) -> tuple[list[str], dict[str, str]]:
@@ -216,6 +301,7 @@ def main() -> None:
     args = parser.parse_args()
     config = load_config(args.config)
     model_cfg = get_model(config, args.model)
+    model_path = Path(args.model_path) if args.model_path else Path(get_model_dir(config, model_cfg, args.source))
 
     command, env = build_command(args, config, model_cfg)
 
@@ -236,10 +322,21 @@ def main() -> None:
         if len(old_data_refs) > 20:
             print(f"  ... and {len(old_data_refs) - 20} more")
 
+    preflight_issues = run_preflight_checks(args, model_cfg, model_path)
+    if preflight_issues:
+        print("")
+        print("Preflight issues:")
+        for issue in preflight_issues:
+            print(f"  - {issue}")
+        if args.run:
+            raise SystemExit(
+                "Refusing to launch vLLM because preflight checks failed. "
+                "Use --skip-preflight-checks only if you have already verified the environment."
+            )
+
     if args.print_only or not args.run:
         return
 
-    model_path = Path(args.model_path) if args.model_path else Path(get_model_dir(config, model_cfg, args.source))
     env_defaults = get_cache_env(config)
     server_root = Path(str(config["paths"]["server_root"]))
     if args.purge_compile_caches:

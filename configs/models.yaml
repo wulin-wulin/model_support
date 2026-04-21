@@ -182,3 +182,24 @@ models:
     notes:
       - HF 模型卡说明 GLM-4.6V 是 106B 的云端大模型，适合高性能集群。
       - vLLM 官方已支持 `Glm4vMoeForConditionalGeneration`；若 4 卡启动余量不够，再升到 TP=8。
+
+  gemma4_31b_it:
+    display_name: Gemma-4-31B-it
+    modality: multimodal
+    local_dir_name: gemma-4-31B-it
+    repo_ids:
+      hf: google/gemma-4-31B-it
+      mop: google/gemma-4-31B-it
+    vllm:
+      served_model_name: gemma-4-31b-it
+      default_port: 8006
+      tensor_parallel_size: 2
+      max_model_len: 32768
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 24
+      allowed_local_media_path: /
+      extra_args: []
+    notes:
+      - ModelScope 模型页显示 repo id 就是 `google/gemma-4-31B-it`，架构为 `Gemma4ForConditionalGeneration`。
+      - vLLM 官方 Gemma 4 指南给出的 31B Dense 推荐起步参数是 TP=2、`max_model_len=32768`、`gpu_memory_utilization=0.90`。
+      - Gemma 4 属于较新的多模态架构；正式部署时优先使用 vLLM 官方 Gemma 4 推荐的 nightly 或专用镜像，不要直接沿用过旧的 `transformers<5` 组合。

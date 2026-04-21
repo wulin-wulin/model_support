@@ -174,9 +174,9 @@ models:
       served_model_name: glm-4.6v
       default_port: 8006
       tensor_parallel_size: 4
-      max_model_len: 16384
+      max_model_len: 65536
       gpu_memory_utilization: 0.9
-      max_num_seqs: 24
+      max_num_seqs: 30
       allowed_local_media_path: /
       extra_args: []
     notes:

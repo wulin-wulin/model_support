@@ -193,12 +193,12 @@ models:
     vllm:
       served_model_name: gemma-4-31b-it
       default_port: 8006
-      tensor_parallel_size: 2
-      max_model_len: 32768
+      tensor_parallel_size: 8
+      max_model_len: 65536
       gpu_memory_utilization: 0.9
-      max_num_seqs: 24
+      max_num_seqs: 15
       allowed_local_media_path: /
-      extra_args: []
+      extra_args: ["--limit-mm-per-prompt audio=0"]
     notes:
       - ModelScope 模型页显示 repo id 就是 `google/gemma-4-31B-it`，架构为 `Gemma4ForConditionalGeneration`。
       - vLLM 官方 Gemma 4 指南给出的 31B Dense 推荐起步参数是 TP=2、`max_model_len=32768`、`gpu_memory_utilization=0.90`。

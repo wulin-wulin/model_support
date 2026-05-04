@@ -11,7 +11,7 @@
 - `scripts/smoke_test_openai.py`: 用 OpenAI SDK 打文本或多模态 smoke test。
 - `scripts/load_test_openai.py`: 简单并发压测，默认适合验证 `20` 并发目标。
 - `scripts/local_tiny_model_smoke.py`: 在本地机器上下载一个很小的模型并做最小可行验证。
-- `requirements/requirements-server.txt`: 服务器基础依赖，已包含 `Qwen3.5` 需要的最新 `transformers`。
+- `requirements/requirements-server.txt`: 服务器基础依赖，已包含 `Qwen3.5` / `Qwen3.6` 需要的基础 Python 包。
 - `docs/01-download-guide.md`: 服务器上如何把模型下载到指定位置。
 - `docs/02-deploy-and-test.md`: 服务器上如何安装 vLLM、启动服务、人工测试和压测。
 
@@ -57,7 +57,7 @@ python scripts/render_commands.py --list
 查看某个模型的下载和启动建议：
 
 ```powershell
-python scripts/render_commands.py --model qwen35_35b_a3b
+python scripts/render_commands.py --model qwen36_35b_a3b
 ```
 
 本地小模型验证：

@@ -36,7 +36,7 @@ python -m pip install -U pip
 python -m pip install -r requirements/requirements-server.txt
 ```
 
-如果你在加载 `Qwen3.5` 本地模型时看到类似下面的错误：
+如果你在加载 `Qwen3.5` / `Qwen3.6` 本地模型时看到类似下面的错误：
 
 ```text
 ValueError: The checkpoint you are trying to load has model type `qwen3_5_moe`
@@ -45,7 +45,7 @@ but Transformers does not recognize this architecture.
 
 这里要区分两条完全不同的链路：
 
-- 如果你是在做“纯 `transformers` 本地加载 / `transformers serve`”验证，那么 `Qwen3.5` 官方模型卡要求使用最新的 `transformers`。
+- 如果你是在做“纯 `transformers` 本地加载 / `transformers serve`”验证，那么 `Qwen3.5` / `Qwen3.6` 官方模型卡要求使用最新的 `transformers`。
 - 如果你是在跑 `vLLM`，就不要因为这条报错把同一个环境直接升级到 `transformers>=5`。当前 `vllm 0.18.x` 明确要求 `transformers<5`，强升到 `5.x` 会把 vLLM 环境变成不兼容状态。
 
 这份工程的 `requirements/requirements-server.txt` 现在已经改回和 vLLM 稳定版对齐的范围：
@@ -64,23 +64,27 @@ python -m pip install --upgrade --force-reinstall --no-cache-dir \
   -i https://pypi.org/simple
 ```
 
-如果你只是想验证 “`transformers` 自己能不能直接识别 Qwen3.5”，建议单独建一个测试环境，不要和 vLLM 共用。
+如果你只是想验证 “`transformers` 自己能不能直接识别 Qwen3.5 / Qwen3.6”，建议单独建一个测试环境，不要和 vLLM 共用。
 
 ## 3. 安装 vLLM
 
 这里要分两层理解：
 
 - vLLM 官方安装文档推荐 Linux 新环境，并明确说 vLLM 原生不支持 Windows。
-- Qwen3.5 官方模型卡又明确写了：对 Qwen3.5，建议使用 vLLM 主干分支对应的 nightly。
+- Qwen3.6 官方模型卡建议使用 `vllm>=0.19.0`，Qwen3.5 / 新版多模态模型也尽量使用较新的 vLLM。
 
 所以这台服务器更稳妥的做法是：
 
 ```bash
 python -m pip install -U uv
-uv pip install vllm --torch-backend=auto --extra-index-url https://wheels.vllm.ai/nightly
+uv pip install -U vllm --torch-backend=auto
 ```
 
-如果你不想上 nightly，也可以先试稳定版；但只要碰到 Qwen3.5 / 新版 GLM / 新版 GUI 模型启动异常，我会优先怀疑 vLLM 版本过旧。
+如果稳定版仍然不识别 Qwen3.6 / Qwen3.5 / 新版 GLM / 新版 GUI 模型，再切到 vLLM nightly：
+
+```bash
+uv pip install -U vllm --torch-backend=auto --extra-index-url https://wheels.vllm.ai/nightly
+```
 
 安装完以后建议再跑一遍：
 
@@ -99,21 +103,21 @@ python scripts/check_storage_paths.py --allow-prefix /home/dataset-local/data/zo
 先只打印，不运行：
 
 ```bash
-python scripts/start_vllm.py --model qwen35_35b_a3b --source hf --print-only
+python scripts/start_vllm.py --model qwen36_35b_a3b --source hf --print-only
 ```
 
 如果模型是从 ModelScope 下载的：
 
 ```bash
-python scripts/start_vllm.py --model qwen35_35b_a3b --source mop --print-only
+python scripts/start_vllm.py --model qwen36_35b_a3b --source mop --print-only
 ```
 
 ## 5. 正式启动服务
 
-例如启动 `Qwen3.5-35B-A3B`：
+例如启动 `Qwen3.6-35B-A3B`：
 
 ```bash
-python scripts/start_vllm.py --model qwen35_35b_a3b --source hf --run
+python scripts/start_vllm.py --model qwen36_35b_a3b --source hf --run
 ```
 
 例如启动 `Qwen3-VL-235B-A22B-Instruct`：
@@ -122,11 +126,11 @@ python scripts/start_vllm.py --model qwen35_35b_a3b --source hf --run
 python scripts/start_vllm.py --model qwen3_vl_235b_a22b --source hf --run
 ```
 
-如果 `Qwen3.5` 在启动阶段报错，堆栈里出现 `qwen3_5.py`、`qwen3_next.py`、`torch._dynamo`、`torch._inductor` 或 `cuda_graph`，先优先做这两步排障：
+如果 `Qwen3.5` / `Qwen3.6` 在启动阶段报错，堆栈里出现 `qwen3_5.py`、`qwen3_next.py`、`torch._dynamo`、`torch._inductor` 或 `cuda_graph`，先优先做这两步排障：
 
 ```bash
 python scripts/start_vllm.py \
-  --model qwen35_35b_a3b \
+  --model qwen36_35b_a3b \
   --source hf \
   --enforce-eager \
   --run
@@ -136,7 +140,7 @@ python scripts/start_vllm.py \
 
 ```bash
 python scripts/start_vllm.py \
-  --model qwen35_35b_a3b \
+  --model qwen36_35b_a3b \
   --source hf \
   --max-cudagraph-capture-size 64 \
   --run
@@ -165,7 +169,7 @@ curl http://127.0.0.1:8006/v1/models
 ```bash
 python scripts/smoke_test_openai.py \
   --base-url http://127.0.0.1:8006/v1 \
-  --model qwen3.5-35b-a3b \
+  --model qwen3.6-35b-a3b \
   --prompt "请用三句话介绍你自己的能力边界。"
 ```
 
@@ -176,7 +180,7 @@ export VLLM_API_KEY=你的key
 python scripts/smoke_test_openai.py \
   --base-url http://127.0.0.1:8006/v1 \
   --api-key 你的key \
-  --model qwen3.5-35b-a3b \
+  --model qwen3.6-35b-a3b \
   --prompt "你好"
 ```
 
@@ -211,7 +215,7 @@ python scripts/smoke_test_openai.py \
 ```bash
 python scripts/load_test_openai.py \
   --base-url http://127.0.0.1:8006/v1 \
-  --model qwen3.5-35b-a3b \
+  --model qwen3.6-35b-a3b \
   --concurrency 20 \
   --requests 60
 ```
@@ -222,7 +226,7 @@ python scripts/load_test_openai.py \
 vllm bench serve \
   --backend openai-chat \
   --endpoint /v1/chat/completions \
-  --model qwen3.5-35b-a3b \
+  --model qwen3.6-35b-a3b \
   --dataset-name random \
   --random-input-len 2048 \
   --random-output-len 512 \
@@ -244,13 +248,13 @@ vllm bench serve \
 2. 再降低单请求图片数量或图片像素上限
 3. 再降低 `--max-num-seqs`
 4. 再考虑把 TP 从 `4` 提到 `8`
-5. 对 Qwen3.5 文本场景，考虑加 `--language-model-only`
+5. 对 Qwen3.5 / Qwen3.6 文本场景，考虑加 `--language-model-only`
 
-例如 Qwen3.5-35B-A3B 文本专用模式：
+例如 Qwen3.6-35B-A3B 文本专用模式：
 
 ```bash
 python scripts/start_vllm.py \
-  --model qwen35_35b_a3b \
+  --model qwen36_35b_a3b \
   --source hf \
   --language-model-only \
   --run

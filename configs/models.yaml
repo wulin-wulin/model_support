@@ -163,6 +163,29 @@ models:
       - Qwen 官方模型卡直接给了 vLLM 启动命令，默认是 TP=8。
       - 如果只做文本服务，可以手动加 `--language-model-only`，把显存更多留给 KV cache。
 
+  qwen36_35b_a3b:
+    display_name: Qwen3.6-35B-A3B
+    modality: multimodal
+    local_dir_name: Qwen3.6-35B-A3B
+    repo_ids:
+      hf: Qwen/Qwen3.6-35B-A3B
+      mop: Qwen/Qwen3.6-35B-A3B
+    vllm:
+      served_model_name: qwen3.6-35b-a3b
+      default_port: 8006
+      tensor_parallel_size: 4
+      max_model_len: 131072
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 20
+      reasoning_parser: qwen3
+      allowed_local_media_path: /
+      extra_args: []
+    notes:
+      - Qwen 官方模型卡说明该模型是 35B 总参数、3B 激活参数的多模态 MoE，原生支持 262,144 tokens 上下文，vLLM 推荐版本为 `>=0.19.0`。
+      - 这里先按 4 卡、128k 上下文、20 并发保守起步；如果显存余量充足，再把 `max_model_len` 提到 262144，或把 TP 从 4 提到 8。
+      - 如果只做文本服务，建议启动时加 `--language-model-only`，跳过视觉编码器和多模态 profiling，把显存更多留给 KV cache。
+      - 如果要启用工具调用，在启动时追加 `--extra-arg="--enable-auto-tool-choice"` 和 `--extra-arg="--tool-call-parser qwen3_coder"`。
+
   glm_46v:
     display_name: GLM-4.6V
     modality: multimodal
